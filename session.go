@@ -1,9 +1,6 @@
 package tmux
 
-import (
-	"os/exec"
-	"strings"
-)
+import "github.com/comogo/tmux-go/cmd"
 
 type Session struct {
 	Name string
@@ -13,16 +10,18 @@ func (s Session) String() string {
 	return s.Name
 }
 
-func (s Session) Destroy() error {
-	return exec.Command("tmux", "kill-session", "-t", s.Name).Run()
+func (s Session) Kill() error {
+	return cmd.KillSession(s.Name)
 }
 
 func (s *Session) Rename(name string) {
-	err := exec.Command("tmux", "rename-session", "-t", s.Name, name).Run()
+	err := cmd.RenameSession(s.Name, name)
 
 	if err != nil {
-		s.Name = name
+		return
 	}
+
+	s.Name = name
 }
 
 func (s Session) Exists() bool {
@@ -35,9 +34,8 @@ func (s Session) Exists() bool {
 	return false
 }
 
-func CreateSession(name string) (*Session, error) {
-	cmd := exec.Command("tmux", "new-session", "-s", name, "-d")
-	err := cmd.Run()
+func NewSession(name string) (*Session, error) {
+	err := cmd.NewSession(name)
 
 	return &Session{Name: name}, err
 }
@@ -51,15 +49,14 @@ func Exists(name string) bool {
 
 	return false
 }
-func ListSessions() []*Session {
-	output, err := exec.Command("tmux", "list-session", "-F", "#{session_name}").CombinedOutput()
 
-	sessions := make([]*Session, 0)
+func ListSessions() []Session {
+	names := cmd.ListSessions()
 
-	if err == nil {
-		for _, row := range strings.Split(string(output), "\n") {
-			sessions = append(sessions, &Session{Name: row})
-		}
+	sessions := make([]Session, len(names))
+
+	for _, name := range names {
+		sessions = append(sessions, Session{Name: name})
 	}
 
 	return sessions

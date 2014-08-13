@@ -2,41 +2,30 @@ package tmux
 
 import "testing"
 
-func TestCreateSession(t *testing.T) {
-	sessions := ListSessions()
+func kill(s *Session) {
+	s.Kill()
+}
 
-	sessions_count := len(sessions)
+func TestNewSession(t *testing.T) {
+	if Exists("foo") {
+		t.Fatal("Expected to not have a session(foo)")
+	}
 
-	session, err := CreateSession("foo")
+	session, err := NewSession("foo")
+	defer kill(session)
 
 	if err != nil {
-		t.Fatal("Cannot create a session")
+		t.Fatalf("Cannot create a session: %s", err)
 	}
 
-	defer session.Destroy()
-
-	sessions = ListSessions()
-
-	if len(sessions) != sessions_count+1 {
-		t.Fatalf("Expect to have %d sessions but found %d", sessions_count+1, len(sessions))
-	}
-
-	founded := false
-	for _, s := range sessions {
-		if s.Name == session.Name {
-			founded = true
-			break
-		}
-	}
-
-	if !founded {
+	if !Exists("foo") {
 		t.Fatalf("Expected to have a session(%s)", session)
 	}
 }
 
 func TestListSessions(t *testing.T) {
-	session, _ := CreateSession("foo")
-	defer session.Destroy()
+	session, _ := NewSession("foo")
+	defer kill(session)
 
 	sessions := ListSessions()
 
@@ -62,8 +51,8 @@ func TestExists(t *testing.T) {
 		t.Fatal("Expect to not exists 'foo' session")
 	}
 
-	session, _ := CreateSession("foo")
-	defer session.Destroy()
+	session, _ := NewSession("foo")
+	defer kill(session)
 
 	if !Exists("foo") {
 		t.Fatal("Expect to exists 'foo' session")
@@ -71,8 +60,8 @@ func TestExists(t *testing.T) {
 }
 
 func TestSession(t *testing.T) {
-	session, _ := CreateSession("foo")
-	defer session.Destroy()
+	session, _ := NewSession("foo")
+	defer kill(session)
 
 	// Test session.Exists()
 	if !session.Exists() {
@@ -88,12 +77,5 @@ func TestSession(t *testing.T) {
 
 	if !Exists("bar") {
 		t.Fatal("Expect to exists 'bar' session")
-	}
-
-	// Test session.Destroy
-	session.Destroy()
-
-	if session.Exists() {
-		t.Fatal("Expect to not exists 'bar' session")
 	}
 }

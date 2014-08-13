@@ -1,0 +1,13 @@
+{
+	"ImportPath": "github.com/comogo/tmux-go",
+	"GoVersion": "go1.3",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/comogo/testify/assert",
+			"Rev": "b9de0d307965047f7dc42d383abf031bf7f5c884"
+		}
+	]
+}
